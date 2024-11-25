@@ -94,6 +94,14 @@ int main() {
     if (useRandom) {
         srand(time(NULL)); // Seed random number generator
         populateRandomPixels(pixels, height, width);
+		
+		 printf("Randomly generated pixel values (0-255):\n");
+        for (i = 0; i < height; i++) {
+            for (j = 0; j < width; j++) {
+                printf("%d ", pixels[i][j]);
+            }
+            printf("\n");
+        }
     } else {
         printf("Enter pixel values (integer between 0 and 255):\n");
         for (i = 0; i < height; i++) {
