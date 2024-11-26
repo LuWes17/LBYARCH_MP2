@@ -2,17 +2,14 @@
 #include <stdlib.h>
 #include <time.h>
 
-// Declare the external assembly function
 extern double imgCvtGrayIntToDouble(double a);
 
-// Function to generate random pixel values (0 to 255)
 int randomPixel() {
     return rand() % 256;
 }
 
-// Populate the image with random pixel values
 void populateRandomPixels(int **pixels, int height, int width) {
-	int i, j;
+    int i, j;
     for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++) {
             pixels[i][j] = randomPixel();
@@ -20,7 +17,24 @@ void populateRandomPixels(int **pixels, int height, int width) {
     }
 }
 
-// Measure execution time of the assembly function
+void inputPixels(int **pixels, int height, int width) {
+	int i, j;
+    printf("Enter pixel values (0 to 255) row by row:\n");
+    for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++) {
+            while (1) {
+                printf("Pixel [%d][%d]: ", i, j);
+                if (scanf("%d", &pixels[i][j]) == 1 && pixels[i][j] >= 0 && pixels[i][j] <= 255) {
+                    break;
+                } else {
+                    printf("Invalid input. Please enter an integer between 0 and 255.\n");
+                    while (getchar() != '\n'); 
+                }
+            }
+        }
+    }
+}
+
 double measureExecutionTime(int **pixels, double **double_pixels, int height, int width) {
     clock_t start, end;
     int i, j;
@@ -35,10 +49,8 @@ double measureExecutionTime(int **pixels, double **double_pixels, int height, in
     return ((double)(end - start)) / CLOCKS_PER_SEC;
 }
 
-// Run benchmark for a specific image size
 void benchmarkConversion(int height, int width) {
-    // Allocate memory for integer pixels
-	int i;
+    int i;
     int **pixels = (int **)malloc(height * sizeof(int *));
     double **double_pixels = (double **)malloc(height * sizeof(double *));
     for (i = 0; i < height; i++) {
@@ -46,19 +58,16 @@ void benchmarkConversion(int height, int width) {
         double_pixels[i] = (double *)malloc(width * sizeof(double));
     }
 
-    // Generate random pixel values
     srand(time(NULL));
     populateRandomPixels(pixels, height, width);
 
-    // Run conversion 30 times and calculate average execution time'
-	int run;
+    int run;
     double total_time = 0.0;
     for (run = 0; run < 30; run++) {
         total_time += measureExecutionTime(pixels, double_pixels, height, width);
     }
     printf("Average execution time for %dx%d image: %.6f seconds\n", height, width, total_time / 30);
 
-    // Free allocated memory
     for (i = 0; i < height; i++) {
         free(pixels[i]);
         free(double_pixels[i]);
@@ -67,6 +76,7 @@ void benchmarkConversion(int height, int width) {
     free(double_pixels);
 }
 
+
 int main() {
     int height, width;
     int i, j;
@@ -74,51 +84,53 @@ int main() {
     printf("Enter height and width of the image: ");
     scanf("%d %d", &height, &width);
 
-    // Allocate memory for integer pixels
     int **pixels = (int **)malloc(height * sizeof(int *));
     for (i = 0; i < height; i++) {
         pixels[i] = (int *)malloc(width * sizeof(int));
     }
 
-    // Allocate memory for double precision pixels
     double **double_pixels = (double **)malloc(height * sizeof(double *));
     for (i = 0; i < height; i++) {
         double_pixels[i] = (double *)malloc(width * sizeof(double));
     }
+	
+	int choice;
+    printf("Choose pixel input method:\n");
+    printf("1. Auto-generate random pixel values\n");
+    printf("2. Manually input pixel values\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
 
-    // Option to use random or manual input
-    printf("Use random pixel values? (1 for yes, 0 for no): ");
-    int useRandom;
-    scanf("%d", &useRandom);
-
-    if (useRandom) {
-        srand(time(NULL)); // Seed random number generator
+	if (choice == 1) {
+        srand(time(NULL)); 
         populateRandomPixels(pixels, height, width);
-		
-		 printf("Randomly generated pixel values (0-255):\n");
-        for (i = 0; i < height; i++) {
-            for (j = 0; j < width; j++) {
-                printf("%d ", pixels[i][j]);
-            }
-            printf("\n");
-        }
+    } else if (choice == 2) {
+        inputPixels(pixels, height, width);
     } else {
-        printf("Enter pixel values (integer between 0 and 255):\n");
+        printf("Invalid choice. Exiting program.\n");
         for (i = 0; i < height; i++) {
-            for (j = 0; j < width; j++) {
-                scanf("%d", &pixels[i][j]);
-            }
+            free(pixels[i]);
+            free(double_pixels[i]);
         }
+        free(pixels);
+        free(double_pixels);
+        return 1;
     }
 
-    // Perform conversion
+      printf("Pixel values (0-255):\n");
+    for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++) {
+            printf("%3d ", pixels[i][j]);
+        }
+        printf("\n");
+    }
+
     for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++) {
             double_pixels[i][j] = imgCvtGrayIntToDouble((double)pixels[i][j]);
         }
     }
 
-    // Print results
     printf("Double float pixel values:\n");
     for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++) {
@@ -127,19 +139,19 @@ int main() {
         printf("\n");
     }
 
-    // Free allocated memory
     for (i = 0; i < height; i++) {
         free(pixels[i]);
         free(double_pixels[i]);
     }
     free(pixels);
     free(double_pixels);
-
-    // Run benchmarks for specific sizes
-    printf("Running benchmarks...\n");
-    benchmarkConversion(10, 10);
-    benchmarkConversion(100, 100);
-    benchmarkConversion(1000, 1000);
+	
+	 if ((height == 10 && width == 10) || 
+        (height == 100 && width == 100) || 
+        (height == 1000 && width == 1000)) {
+        printf("Running benchmarks for %dx%d image...\n", height, width);
+        benchmarkConversion(height, width);
+    }
 
     return 0;
 }
