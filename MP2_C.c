@@ -134,7 +134,7 @@ int main() {
     printf("Double float pixel values:\n");
     for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++) {
-            printf("%.2lf ", double_pixels[i][j]);
+            printf("%.4lf ", double_pixels[i][j]);
         }
         printf("\n");
     }
